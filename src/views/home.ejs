@@ -10,8 +10,7 @@
 <% comentarios.forEach(c => { %>
 <div class="card">
 <div class="meta"><strong><%= c.autor %></strong> — <%= c.data %></div>
-<%# ⚠️ VULNERABILIDADE XSS: usando <%- em vez de <%= ! %>
-<p><%- c.texto %></p>
+<p><%= c.texto %></p>
 <div style="display:flex;gap:6px;margin-top:8px">
 <form method="POST" action="/comentarios/<%= c.id %>/remover"><button type="submit" class="btn-danger">Remover</button></form>
 </div></div>

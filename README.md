@@ -3,16 +3,16 @@
 Este app tem **11 VULNERABILIDADES PROPOSITAIS**. Sua missão em 2 partes:
 
 ## Parte A — Caçar e corrigir vulnerabilidades
-1. Secret fraco ("123") → trocar por string longa
-2. httpOnly: false → trocar por true
-3. Senha comparada em texto puro → instalar bcrypt, usar compare
-4. Mensagem revela email → "Email ou senha incorretos"
-5. Registro sem validação → validar campos
-6. Senha texto puro → bcrypt.hash
-7. Comentário sem validação → validar texto
-8. IDOR: editar sem userId → verificar dono
-9. IDOR: remover sem userId → verificar dono
-10. API retorna senhas → filtrar
+1. Secret fraco ("123") → trocar por string longa: OK
+2. httpOnly: false → trocar por true: OK
+3. Senha comparada em texto puro → instalar bcrypt, usar compare: OK
+4. Mensagem revela email → "Email ou senha incorretos": OK
+5. Registro sem validação → validar campos: OK
+6. Senha texto puro → bcrypt.hash: OK
+7. Comentário sem validação → validar texto: OK
+8. IDOR: editar sem userId → verificar dono: OK
+9. IDOR: remover sem userId → verificar dono: OK
+10. API retorna senhas → filtrar: OK
 11. Admin sem role check → verificar
 12. (BÔNUS) View usa <%- %> → trocar por <%= %>
 
