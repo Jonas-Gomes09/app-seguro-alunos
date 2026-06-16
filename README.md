@@ -13,8 +13,8 @@ Este app tem **11 VULNERABILIDADES PROPOSITAIS**. Sua missão em 2 partes:
 8. IDOR: editar sem userId → verificar dono: OK
 9. IDOR: remover sem userId → verificar dono: OK
 10. API retorna senhas → filtrar: OK
-11. Admin sem role check → verificar
-12. (BÔNUS) View usa <%- %> → trocar por <%= %>
+11. Admin sem role check → verificar: OK
+12. (BÔNUS) View usa <%- %> → trocar por <%= %>: OK
 
 ## Parte B — Adicionar ferramentas de proteção
 As dependências já estão no package.json!

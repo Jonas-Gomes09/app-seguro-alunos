@@ -1,12 +1,18 @@
-import express from "express";
+import express, {Request, Response, NextFunction} from "express";
 import session from "express-session";
 import { readFileSync, writeFileSync } from "fs";
 import bcrypt from "bcrypt"
-import {body, validationResult} from "express-validator"
+import { middlewareValidar } from "./middlewares/validators";
+import { limiterGeral, limiterLogin } from "./middlewares/rate-limiter";
+import cors from "cors"
+import helmet from "helmet";
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(limiterGeral)
+app.use(cors())
+app.use(helmet())
 
 // ⚠️ VULNERABILIDADE 1: secret fraco e previsível
 app.use(session({ secret: "123-senha-secreta-senac-2026", resave: false, saveUninitialized: false,
@@ -24,7 +30,7 @@ function salvarComentarios(c:any[]) { writeFileSync("dados/comentarios.json", JS
 
 // LOGIN
 app.get("/login", (req,res) => { const flash=req.session.flash||null; req.session.flash=null; res.render("login",{flash}); });
-app.post("/login", (req,res) => {
+app.post("/login", limiterLogin, (req,res) => {
   const {email,senha} = req.body;
   const users = carregarUsers();
 
@@ -46,7 +52,7 @@ app.post("/login", (req,res) => {
 
 // REGISTRO
 app.get("/registro", (req,res) => { res.render("registro",{flash:null}); });
-app.post("/registro", (req,res) => {
+app.post("/registro", limiterLogin, (req,res) => {
   const {nome,email,senha} = req.body;
   let erros: String[] = []
   if(!nome || nome === "") {
@@ -81,16 +87,9 @@ app.get("/", (req,res) => {
   res.render("home", { nome:req.session.userName, role:req.session.userRole, comentarios, flash });
 });
 
-app.post("/comentar", (req,res) => {
+app.post("/comentar", middlewareValidar, (req,res) => {
   if (!req.session.userId) { res.redirect("/login"); return; }
   // ⚠️ VULNERABILIDADE 7: sem validação do texto!
-  body(req.body.texto).trim().notEmpty().escape().withMessage("O comentário não pode estar vazio.")
-
-  const erros = validationResult(req)
-  if (!erros.isEmpty()) {
-    req.session.flash = erros.array().map(e => e.msg).join(", ")
-    res.redirect("/comentar"); return;
-  }
 
   const coments = carregarComentarios();
   coments.push({ id: coments.length+1, userId: req.session.userId, autor: req.session.userName,
@@ -139,6 +138,9 @@ app.get("/api/usuarios", (req,res) => {
 app.get("/admin", (req,res) => {
   // ⚠️ VULNERABILIDADE 11: sem requireRole! Qualquer logado acessa!
   if (!req.session.userId) { res.redirect("/login"); return; }
+  if (req.session.userRole !== "admin") {
+    res.redirect("/"); return;
+  }
   res.render("admin", { usuarios: carregarUsers(), flash:null });
 });
 
