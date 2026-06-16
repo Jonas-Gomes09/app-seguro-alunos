@@ -14,10 +14,9 @@ app.use(limiterGeral)
 app.use(cors())
 app.use(helmet())
 
-// ⚠️ VULNERABILIDADE 1: secret fraco e previsível
 app.use(session({ secret: "123-senha-secreta-senac-2026", resave: false, saveUninitialized: false,
   cookie: { maxAge: 60*60*1000, httpOnly: true, secure: false } }));
-//                                httpOnly: false ← ⚠️ VULNERABILIDADE 2
+                        
 
 app.set("view engine", "ejs");
 app.set("views", "./src/views");
@@ -36,15 +35,8 @@ app.post("/login", limiterLogin, (req,res) => {
 
   const user = users.find((u:any) => u.email === email);
   let erros: String[] = []
-  
-    if (!user.email === email) {
-      erros.push("Email incorreto")
-    }
-    if (!bcrypt.compare(user.senha, senha)) {
-      erros.push("Senha incorreta")
-    }
 
-    if (erros.length > 0) {res.redirect("/login"); return;}
+    if (!user) {res.status(400).json({erro: "Email ou senha incorretos"}); return;}
 
   req.session.userId = user.id; req.session.userName = user.nome; req.session.userRole = user.role;
   res.redirect("/");
@@ -89,7 +81,6 @@ app.get("/", (req,res) => {
 
 app.post("/comentar", middlewareValidar, (req,res) => {
   if (!req.session.userId) { res.redirect("/login"); return; }
-  // ⚠️ VULNERABILIDADE 7: sem validação do texto!
 
   const coments = carregarComentarios();
   coments.push({ id: coments.length+1, userId: req.session.userId, autor: req.session.userName,
@@ -103,7 +94,6 @@ app.post("/comentarios/:id/editar", (req,res) => {
   if (!req.session.userId) { res.redirect("/login"); return; }
   const coments = carregarComentarios();
   const c = coments.find((c:any) => c.id === Number(req.params.id));
-  // ⚠️ VULNERABILIDADE 8: IDOR — não verifica se é o dono!
 
   if (coments.user.id !== req.session.userId) {
     res.status(403).send("Proibido"); return;
@@ -116,7 +106,6 @@ app.post("/comentarios/:id/editar", (req,res) => {
 app.post("/comentarios/:id/remover", (req,res) => {
   if (!req.session.userId) { res.redirect("/login"); return; }
   let coments = carregarComentarios();
-  // ⚠️ VULNERABILIDADE 9: IDOR — não verifica se é o dono!
   coments = coments.filter((c:any) => c.id !== Number(req.params.id));
   if (coments.user.id !== req.session.userId) {
     res.status(403).send("Proibido"); return;
@@ -130,13 +119,11 @@ app.get("/api/usuarios", (req,res) => {
   const users = carregarUsers();
 
   const {nome,email} = users
-  // ⚠️ VULNERABILIDADE 10: retorna SENHA na resposta!
   res.json(users);
 });
 
 // ADMIN (sem guard!)
 app.get("/admin", (req,res) => {
-  // ⚠️ VULNERABILIDADE 11: sem requireRole! Qualquer logado acessa!
   if (!req.session.userId) { res.redirect("/login"); return; }
   if (req.session.userRole !== "admin") {
     res.redirect("/"); return;
